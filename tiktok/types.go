@@ -94,3 +94,8 @@ type SearchUserResp struct {
 	GeneralResp[[]SearchUserItemResp]
 	UserList []SearchUserItemResp `json:"user_list"`
 }
+
+type GetUserContentResp struct {
+	GeneralResp[[]SearchContentItemResp]
+	ItemList []SearchContentItemResp `json:"itemList"`
+}

@@ -14,6 +14,8 @@ type TiktokCrawler interface {
 	Search(ctx context.Context, param SearchParam) ([]ContentItemResp, error)
 	// Search user by search parameter
 	SearchUser(ctx context.Context, param SearchParam) ([]UserInfoResp, error)
+	// Get user content
+	GetUserContent(ctx context.Context, param SearchParam) ([]ContentItemResp, error)
 }
 type Tiktok struct {
 	config crawler.Config

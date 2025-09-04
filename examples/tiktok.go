@@ -36,34 +36,48 @@ func main() {
 	defer cancel()
 
 	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		result, err := tiktokCrawler.SearchUser(ctx, tiktok.SearchParam{
-			Term:   "ahmad",
-			Scroll: 4,
-		})
-		if err != nil {
-			fmt.Println("failed search user", err.Error())
-			return
-		}
-
-		fmt.Println("search user result len ", result)
-	}()
+	wg.Add(1)
 
 	go func() {
 		defer wg.Done()
-		result, err := tiktokCrawler.Search(ctx, tiktok.SearchParam{
-			Term:   "golang",
+		result, err := tiktokCrawler.GetUserContent(ctx, tiktok.SearchParam{
+			Term:   "tiktok",
 			Scroll: 4,
 		})
 		if err != nil {
-			fmt.Println("failed search content", err.Error())
+			fmt.Println("failed get user content", err.Error())
 			return
 		}
 
-		fmt.Println("search content result len ", result)
+		fmt.Println("get user content result len ", result)
 	}()
+	// go func() {
+	// 	defer wg.Done()
+	// 	result, err := tiktokCrawler.SearchUser(ctx, tiktok.SearchParam{
+	// 		Term:   "ahmad",
+	// 		Scroll: 4,
+	// 	})
+	// 	if err != nil {
+	// 		fmt.Println("failed search user", err.Error())
+	// 		return
+	// 	}
+
+	// 	fmt.Println("search user result len ", result)
+	// }()
+
+	// go func() {
+	// 	defer wg.Done()
+	// 	result, err := tiktokCrawler.Search(ctx, tiktok.SearchParam{
+	// 		Term:   "golang",
+	// 		Scroll: 4,
+	// 	})
+	// 	if err != nil {
+	// 		fmt.Println("failed search content", err.Error())
+	// 		return
+	// 	}
+
+	// 	fmt.Println("search content result len ", result)
+	// }()
 
 	wg.Wait()
 
