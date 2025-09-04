@@ -16,8 +16,8 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
-func (crawler *Tiktok) Search(ctx context.Context, param SearchParam) ([]ContentItemResp, error) {
-	var cards []ContentItemResp
+func (crawler *Tiktok) SearchUser(ctx context.Context, param SearchParam) ([]UserInfoResp, error) {
+	var cards []UserInfoResp
 	// Chrome options
 	opts, err := crawler.config.GetOpts()
 	if err != nil {
@@ -32,7 +32,7 @@ func (crawler *Tiktok) Search(ctx context.Context, param SearchParam) ([]Content
 	ctx, cancel = chromedp.NewContext(allocCtx)
 	defer cancel()
 
-	uri, err := url.Parse(`https://tiktok.com/search`)
+	uri, err := url.Parse(`https://tiktok.com/search/user`)
 	if err != nil {
 		return cards, nil
 	}
@@ -42,7 +42,7 @@ func (crawler *Tiktok) Search(ctx context.Context, param SearchParam) ([]Content
 	query.Add("t", strconv.FormatInt(time.Now().UnixMilli(), 10))
 	uri.RawQuery = query.Encode()
 	listenErr := make(chan error, 1)
-	resultChannel := make(chan ContentItemResp, 1)
+	resultChannel := make(chan UserInfoResp, 1)
 	shouldScrollCh := make(chan bool, 1)
 	var totalLoad int = 0
 	var wg sync.WaitGroup
@@ -69,7 +69,7 @@ func (crawler *Tiktok) Search(ctx context.Context, param SearchParam) ([]Content
 		ctx, func(ev any) {
 			switch ev := ev.(type) {
 			case *fetch.EventRequestPaused:
-				go crawler.collectSearchResult(ctx, ev, resultChannel, listenErr, shouldScrollCh, &totalLoad, int(param.Scroll))
+				go crawler.collectSearchUserResult(ctx, ev, resultChannel, listenErr, shouldScrollCh, &totalLoad, int(param.Scroll))
 			}
 		},
 	)
@@ -78,12 +78,12 @@ func (crawler *Tiktok) Search(ctx context.Context, param SearchParam) ([]Content
 		network.Enable(),
 		fetch.Enable().WithPatterns([]*fetch.RequestPattern{
 			{
-				URLPattern:   "*/search/general/full/*",
+				URLPattern:   "*/search/user/full/*",
 				RequestStage: fetch.RequestStageResponse,
 			},
 		}),
 		chromedp.Navigate(uri.String()),
-		chromedp.WaitVisible(`[data-e2e="search_top-item-list"]`, chromedp.ByQuery),
+		chromedp.WaitVisible(`[data-e2e="search-user-container"]`, chromedp.ByQuery),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			if param.Scroll < 1 {
 				return nil
@@ -91,7 +91,7 @@ func (crawler *Tiktok) Search(ctx context.Context, param SearchParam) ([]Content
 
 			for shouldScroll := range shouldScrollCh {
 				var nodes []*cdp.Node
-				err = chromedp.Nodes(`[id^="column-item-video-container-"]`, &nodes, chromedp.ByQueryAll).Do(ctx)
+				err = chromedp.Nodes(`[id^="search_user-item-user-link-"]`, &nodes, chromedp.ByQueryAll).Do(ctx)
 				if err != nil {
 					listenErr <- fmt.Errorf("scrolldown err : %w", err)
 					continue
@@ -128,10 +128,10 @@ func (crawler *Tiktok) Search(ctx context.Context, param SearchParam) ([]Content
 	return cards, nil
 }
 
-func (t *Tiktok) collectSearchResult(
+func (t *Tiktok) collectSearchUserResult(
 	ctx context.Context,
 	ev *fetch.EventRequestPaused,
-	resultCh chan<- ContentItemResp,
+	resultCh chan<- UserInfoResp,
 	errCh chan<- error,
 	shouldScrollCh chan<- bool,
 	totalLoad *int,
@@ -162,7 +162,7 @@ func (t *Tiktok) collectSearchResult(
 		hasMoreCh <- false
 		return
 	}
-	var searchResp GeneralResp[[]SearchContentItemResp]
+	var searchResp SearchUserResp
 	err = json.Unmarshal(bByte, &searchResp)
 	if err != nil {
 		errCh <- fmt.Errorf("tiktok crawler err : %w", err)
@@ -170,8 +170,8 @@ func (t *Tiktok) collectSearchResult(
 		return
 	}
 
-	for _, v := range searchResp.Data {
-		resultCh <- v.Item
+	for _, v := range searchResp.UserList {
+		resultCh <- v.UserInfo
 	}
 
 	errCh <- nil

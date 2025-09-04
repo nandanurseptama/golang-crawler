@@ -21,13 +21,13 @@ type Content struct {
 
 // General Response of api tiktok
 type GeneralResp[T any] struct {
-	StatusCode int  `json:"status_code"`
-	Data       T    `json:"data"`
+	StatusCode int `json:"status_code"`
+	Data       T   `json:"data"`
 	HasMore    int `json:"has_more"`
 }
 
 // Wrapper of response
-type SearchItemResp struct {
+type SearchContentItemResp struct {
 	Type int             `json:"type"`
 	Item ContentItemResp `json:"item"`
 }
@@ -72,4 +72,22 @@ type AuthorResp struct {
 	Signature      string `json:"signature"`
 	PrivateAccount bool   `json:"privateAccount"`
 	OpenFavorite   bool   `json:"openFavorite"`
+}
+
+type UserInfoResp struct {
+	Uid           string `json:"uid"`
+	Nickname      string `json:"nickname"`
+	Signature     string `json:"signature"`
+	FollowerCount uint64 `json:"follower_count"`
+	UniqueId      string `json:"unique_id"`
+}
+
+// Wrapper of response
+type SearchUserItemResp struct {
+	UserInfo UserInfoResp `json:"user_info"`
+}
+
+type SearchUserResp struct {
+	GeneralResp[[]SearchUserItemResp]
+	UserList []SearchUserItemResp `json:"user_list"`
 }

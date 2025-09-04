@@ -18,6 +18,6 @@ require (
 
 go 1.24.5
 
-replace github.com/nandanurseptama/golang-crawler/tiktok => ./tiktok
+replace github.com/nandanurseptama/golang-crawler/tiktok => ../tiktok
 
-replace github.com/nandanurseptama/golang-crawler/crawler => ./crawler
+replace github.com/nandanurseptama/golang-crawler/crawler => ../crawler
