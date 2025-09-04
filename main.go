@@ -26,12 +26,13 @@ func main() {
 
 	tiktokCrawler := tiktok.NewCrawler(config)
 
-	result, err := tiktokCrawler.Search("golang")
+	result, err := tiktokCrawler.Search(tiktok.SearchParam{
+		Term:   "golang",
+		Scroll: 4,
+	})
 	if err != nil {
 		panic(err)
 	}
 
-	for _, v := range result {
-		fmt.Println("result", v)
-	}
+	fmt.Println("result len ", len(result))
 }

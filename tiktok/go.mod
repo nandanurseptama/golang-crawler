@@ -14,6 +14,7 @@ require (
 )
 
 require github.com/chromedp/chromedp v0.14.1
+
 require github.com/nandanurseptama/golang-crawler/crawler v0.0.0
 
 replace github.com/nandanurseptama/golang-crawler/crawler => ../crawler
