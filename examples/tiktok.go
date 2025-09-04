@@ -1,4 +1,4 @@
-// Copyright The Golang Crawler
+// Copyright The Golang Crawler Author
 // SPDX-License-Identifier: Apache-2.0
 
 package main

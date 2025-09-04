@@ -1,4 +1,4 @@
-// Copyright The Golang Crawler
+// Copyright The Golang Crawler Author
 // SPDX-License-Identifier: Apache-2.0
 
 package tiktok
@@ -50,20 +50,11 @@ func (crawler *Tiktok) SearchUser(ctx context.Context, param SearchParam) ([]Use
 	var totalLoad int = 0
 	var wg sync.WaitGroup
 
-	wg.Add(2)
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for result := range resultChannel {
 			cards = append(cards, result)
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-		for err := range listenErr {
-			if err != nil {
-				fmt.Println("listen channel err ", err.Error())
-			}
 		}
 	}()
 
@@ -93,24 +84,23 @@ func (crawler *Tiktok) SearchUser(ctx context.Context, param SearchParam) ([]Use
 			}
 
 			for shouldScroll := range shouldScrollCh {
+
 				var nodes []*cdp.Node
 				err = chromedp.Nodes(`[id^="search_user-item-user-link-"]`, &nodes, chromedp.ByQueryAll).Do(ctx)
 				if err != nil {
-					listenErr <- fmt.Errorf("scrolldown err : %w", err)
-					continue
+					return fmt.Errorf("tiktok crawler err : %w", err)
 				}
 
 				if !shouldScroll {
 					return nil
 				}
+
 				_, exp, err := runtime.Evaluate(`window.scrollTo(0,document.body.scrollHeight);`).Do(ctx)
 				if err != nil {
-					listenErr <- fmt.Errorf("scrolldown err : %w", err)
-					continue
+					return fmt.Errorf("tiktok crawler err : %w", err)
 				}
 				if exp != nil {
-					listenErr <- fmt.Errorf("scrolldown err : %w", exp)
-					continue
+					return fmt.Errorf("tiktok crawler err : %s", exp.Error())
 				}
 			}
 
@@ -128,6 +118,10 @@ func (crawler *Tiktok) SearchUser(ctx context.Context, param SearchParam) ([]Use
 		return cards, err
 	}
 
+	if err := <-listenErr; err != nil {
+		return cards, err
+	}
+
 	return cards, nil
 }
 
@@ -140,6 +134,7 @@ func (t *Tiktok) collectSearchUserResult(
 	totalLoad *int,
 	maxScroll int,
 ) {
+	// slog.Info("collectSearchResult", slog.Any("total_load", *totalLoad), slog.Any("max_scroll", maxScroll))
 	hasMoreCh := make(chan bool, 1)
 	scroll := func(canNext <-chan bool) {
 		time.Sleep(2 * time.Second)
@@ -157,9 +152,14 @@ func (t *Tiktok) collectSearchUserResult(
 	c := chromedp.FromContext(ctx)
 	e := cdp.WithExecutor(ctx, c.Target)
 	bByte, err := fetch.GetResponseBody(ev.RequestID).Do(e)
-	fetch.ContinueResponse(ev.RequestID).Do(e)
-	// essential for trigger WaitVisible
 	defer scroll(hasMoreCh)
+	// essential for trigger WaitVisible
+	if err != nil {
+		errCh <- fmt.Errorf("tiktok crawler err : %w", err)
+		hasMoreCh <- false
+		return
+	}
+	err = fetch.ContinueResponse(ev.RequestID).Do(e)
 	if err != nil {
 		errCh <- fmt.Errorf("tiktok crawler err : %w", err)
 		hasMoreCh <- false
@@ -177,7 +177,6 @@ func (t *Tiktok) collectSearchUserResult(
 		resultCh <- v.UserInfo
 	}
 
-	errCh <- nil
 	hasMoreCh <- (searchResp.HasMore == 1)
 
 }

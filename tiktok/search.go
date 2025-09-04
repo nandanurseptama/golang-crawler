@@ -1,4 +1,4 @@
-// Copyright The Golang Crawler
+// Copyright The Golang Crawler Author
 // SPDX-License-Identifier: Apache-2.0
 
 package tiktok
@@ -50,20 +50,11 @@ func (crawler *Tiktok) Search(ctx context.Context, param SearchParam) ([]Content
 	var totalLoad int = 0
 	var wg sync.WaitGroup
 
-	wg.Add(2)
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for result := range resultChannel {
 			cards = append(cards, result)
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-		for err := range listenErr {
-			if err != nil {
-				fmt.Println("listen channel err ", err.Error())
-			}
 		}
 	}()
 
@@ -96,8 +87,7 @@ func (crawler *Tiktok) Search(ctx context.Context, param SearchParam) ([]Content
 				var nodes []*cdp.Node
 				err = chromedp.Nodes(`[id^="column-item-video-container-"]`, &nodes, chromedp.ByQueryAll).Do(ctx)
 				if err != nil {
-					listenErr <- fmt.Errorf("scrolldown err : %w", err)
-					continue
+					return fmt.Errorf("tiktok crawler err : %w", err)
 				}
 
 				if !shouldScroll {
@@ -105,12 +95,10 @@ func (crawler *Tiktok) Search(ctx context.Context, param SearchParam) ([]Content
 				}
 				_, exp, err := runtime.Evaluate(`window.scrollTo(0,document.body.scrollHeight);`).Do(ctx)
 				if err != nil {
-					listenErr <- fmt.Errorf("scrolldown err : %w", err)
-					continue
+					return fmt.Errorf("tiktok crawler err : %w", err)
 				}
 				if exp != nil {
-					listenErr <- fmt.Errorf("scrolldown err : %w", exp)
-					continue
+					return fmt.Errorf("tiktok crawler err : %s", exp.Error())
 				}
 			}
 
@@ -125,6 +113,10 @@ func (crawler *Tiktok) Search(ctx context.Context, param SearchParam) ([]Content
 	wg.Wait()
 
 	if err != nil {
+		return cards, err
+	}
+
+	if err := <-listenErr; err != nil {
 		return cards, err
 	}
 
@@ -177,7 +169,6 @@ func (t *Tiktok) collectSearchResult(
 		resultCh <- v.Item
 	}
 
-	errCh <- nil
 	hasMoreCh <- (searchResp.HasMore == 1)
 
 }
