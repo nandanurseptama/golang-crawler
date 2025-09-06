@@ -33,13 +33,17 @@ func main() {
 	defer cancel()
 
 	results, err := youtubeCrawler.SearchContent(ctx, youtube.SearchContentParam{
-		Term: "golang",
+		Term:                "golang",
+		Scroll:              3,
+		DelayScrollDuration: time.Second * 3,
 	})
 
 	if err != nil {
 		fmt.Println("failed get search content", err.Error())
 		return
 	}
+
+	slog.Info("results", slog.Any("length", len(results)))
 
 	for i, v := range results {
 		slog.Info("item at", slog.Any("index", i), slog.Any("value", v))

@@ -4,6 +4,18 @@
 // This file contains collection of youtube response struct
 package youtube
 
+type SearchContentResp struct {
+	OnResponseReceiveCommands []OnResponseReceiveCommandsResp `json:"onResponseReceivedCommands"`
+}
+
+type OnResponseReceiveCommandsResp struct {
+	AppendContinuationItemsAction AppendContinuationItemsActionResp `json:"appendContinuationItemsAction"`
+}
+
+type AppendContinuationItemsActionResp struct {
+	ContinuationItems []ContinuationItemResp `json:"continuationItems"`
+}
+
 type YtInitialDataResp struct {
 	Contents struct {
 		TwoColumn struct {

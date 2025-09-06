@@ -3,21 +3,18 @@
 
 package youtube
 
+import "time"
+
 type SearchContentParam struct {
 	Term string
+
+	// Total scroll of page
+	// it will scroll as much of this
+	Scroll uint
+
+	// Delay duration between scroll
+	DelayScrollDuration time.Duration
 }
-
-// type GeneralResponse struct {
-// 	OnResponseReceiveCommands []OnResponseReceiveCommandsResp `json:"onResponseReceivedCommands"`
-// }
-
-// type OnResponseReceiveCommandsResp struct {
-// 	AppendContinuationItemsAction AppendContinuationItemsActionResp `json:"appendContinuationItemsAction"`
-// }
-
-// type AppendContinuationItemsActionResp struct {
-// 	ContinuationItems []ContinuationItemResp `json:"continuationItems"`
-// }
 
 type VideoItem struct {
 	ID         string      `json:"ID"`
