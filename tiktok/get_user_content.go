@@ -1,3 +1,6 @@
+// Copyright The Golang Crawler Author
+// SPDX-License-Identifier: Apache-2.0
+
 package tiktok
 
 import (

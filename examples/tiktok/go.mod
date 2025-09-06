@@ -1,4 +1,4 @@
-module github.com/nandanurseptama/golang-crawler
+module github.com/nandanurseptama/golang-crawler/examples/tiktok
 
 require github.com/nandanurseptama/golang-crawler/tiktok v0.0.0
 
@@ -18,6 +18,6 @@ require (
 
 go 1.24.5
 
-replace github.com/nandanurseptama/golang-crawler/tiktok => ../tiktok
+replace github.com/nandanurseptama/golang-crawler/tiktok => ../../tiktok
 
-replace github.com/nandanurseptama/golang-crawler/crawler => ../crawler
+replace github.com/nandanurseptama/golang-crawler/crawler => ../../crawler
