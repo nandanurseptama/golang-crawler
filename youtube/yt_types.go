@@ -69,7 +69,8 @@ func (item *ItemSectionRendererResp) GetVideoItems() []VideoItem {
 }
 
 type ContentResp struct {
-	VideoRenderer VideoRendererResp `json:"videoRenderer"`
+	VideoRenderer   VideoRendererResp   `json:"videoRenderer"`
+	ChannelRenderer ChannelRendererResp `json:"channelRenderer"`
 }
 
 type VideoRendererResp struct {
@@ -193,4 +194,61 @@ func (owner *OwnerTextResp) GetChannel() Channel {
 		ID:       first.NavigateEndpoint.BrowseEndpoint.BrowseId,
 		Endpoint: first.NavigateEndpoint.BrowseEndpoint.BaseUrl,
 	}
+}
+
+type ChannelRendererResp struct {
+	ChannelID       string         `json:"channelId"`
+	Thumbnail       ThumbnailResp  `json:"thumbnail"`
+	Title           SimpleTextResp `json:"title"`
+	SubscriberCount SimpleTextResp `json:"videoCountText"`
+	Owner           OwnerTextResp  `json:"shortBylineText"`
+	Description     TitleResp      `json:"descriptionSnippet"`
+}
+
+func (v *ChannelRendererResp) ToChannelItem() ChannelItem {
+	if v == nil {
+		return ChannelItem{}
+	}
+	return ChannelItem{
+		Channel: Channel{
+			ID:       v.ChannelID,
+			Endpoint: v.Owner.GetChannel().Endpoint,
+			Name:     v.Owner.GetChannel().Name,
+		},
+		Thumbnails:          v.Thumbnail.Thumbnails,
+		Description:         v.Description.GetTitle(),
+		SubscriberCountText: v.SubscriberCount.SimpleText,
+	}
+}
+
+func (item *ItemSectionRendererResp) GetChannelItems() []ChannelItem {
+	if item == nil {
+		return []ChannelItem{}
+	}
+
+	if len(item.Contents) < 1 {
+		return []ChannelItem{}
+	}
+
+	var results []ChannelItem
+	for _, v := range item.Contents {
+		if v.ChannelRenderer.ChannelID == "" {
+			continue
+		}
+
+		results = append(results, v.ChannelRenderer.ToChannelItem())
+	}
+	return results
+
+}
+
+func (resp *YtInitialDataResp) GetChannelItems() []ChannelItem {
+	if resp == nil {
+		return []ChannelItem{}
+	}
+	var results []ChannelItem
+	for _, v := range resp.Contents.TwoColumn.PrimaryContents.SectionList.Contents {
+		results = append(results, v.ItemSectionRenderer.GetChannelItems()...)
+	}
+	return results
 }

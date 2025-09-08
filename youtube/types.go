@@ -19,7 +19,7 @@ type SearchContentParam struct {
 type VideoItem struct {
 	ID         string      `json:"ID"`
 	Channel    Channel     `json:"channel"`
-	Thumbnails []Thumbnail `json:"thumbnail"`
+	Thumbnails []Thumbnail `json:"thumbnails"`
 	// video duration in seconds
 	Duration      uint64 `json:"duration"`
 	DurationText  string `json:"durationText"`
@@ -42,4 +42,11 @@ type Thumbnail struct {
 	Url    string `json:"url"`
 	Width  int    `json:"width"`
 	Height int    `json:"height"`
+}
+
+type ChannelItem struct {
+	Channel
+	Description         string      `json:"description"`
+	SubscriberCountText string      `json:"subsciberCountText"`
+	Thumbnails          []Thumbnail `json:"thumbnails"`
 }

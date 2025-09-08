@@ -32,7 +32,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
-	results, err := youtubeCrawler.SearchContent(ctx, youtube.SearchContentParam{
+	results, err := youtubeCrawler.SearchChannel(ctx, youtube.SearchContentParam{
 		Term:                "golang",
 		Scroll:              3,
 		DelayScrollDuration: time.Second * 3,

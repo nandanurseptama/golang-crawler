@@ -11,6 +11,7 @@ import (
 
 type YoutubeCrawler interface {
 	SearchContent(ctx context.Context, param SearchContentParam) ([]VideoItem, error)
+	SearchChannel(ctx context.Context, param SearchContentParam) ([]ChannelItem, error)
 }
 
 type Youtube struct {
