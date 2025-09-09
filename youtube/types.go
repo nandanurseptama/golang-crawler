@@ -50,3 +50,18 @@ type ChannelItem struct {
 	SubscriberCountText string      `json:"subsciberCountText"`
 	Thumbnails          []Thumbnail `json:"thumbnails"`
 }
+
+type UserContentItem struct {
+	ID         string      `json:"ID"`
+	Thumbnails []Thumbnail `json:"thumbnails"`
+	// video duration in seconds
+	Duration      uint64 `json:"duration"`
+	DurationText  string `json:"durationText"`
+	ViewCount     uint64 `json:"viewCount"`
+	ViewCountText string `json:"viewCountText"`
+	Title         string `json:"title"`
+	// Video description
+	Desc string `json:"desc"`
+	// video published time
+	PublishedTime string `json:"publishedTime"`
+}

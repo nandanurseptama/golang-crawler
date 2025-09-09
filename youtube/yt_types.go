@@ -252,3 +252,84 @@ func (resp *YtInitialDataResp) GetChannelItems() []ChannelItem {
 	}
 	return results
 }
+
+type UserVideoRendererResp struct {
+	VideoID       string         `json:"videoId"`
+	Thumbnail     ThumbnailResp  `json:"thumbnail"`
+	Title         TitleResp      `json:"title"`
+	Length        SimpleTextResp `json:"lengthText"`
+	ViewCount     SimpleTextResp `json:"viewCountText"`
+	PublishedTime SimpleTextResp `json:"publishedTimeText"`
+	Description   TitleResp      `json:"descriptionSnippet"`
+}
+
+func (v *UserVideoRendererResp) ToVideoItem() UserContentItem {
+	if v == nil {
+		return UserContentItem{}
+	}
+	return UserContentItem{
+		ID:            v.VideoID,
+		Thumbnails:    v.Thumbnail.Thumbnails,
+		DurationText:  v.Length.GetText(),
+		Duration:      parseDurationToSeconds(v.Length.GetText()),
+		ViewCountText: v.ViewCount.GetText(),
+		ViewCount:     parseViewCount(v.ViewCount.GetText()),
+		Title:         v.Title.GetTitle(),
+		Desc:          v.Description.GetTitle(),
+		PublishedTime: v.PublishedTime.GetText(),
+	}
+}
+
+type UserContentYtInitialDataResp struct {
+	Contents struct {
+		TwoColumn struct {
+			Tabs []struct {
+				TabRenderer struct {
+					Content struct {
+						RichGridRenderer struct {
+							Contents []struct {
+								RichItemRenderer struct {
+									Content struct {
+										VideoRenderer UserVideoRendererResp `json:"videoRenderer"`
+									} `json:"content"`
+								} `json:"richItemRenderer"`
+							} `json:"contents"`
+						} `json:"richGridRenderer"`
+					} `json:"content"`
+				} `json:"tabRenderer"`
+			} `json:"tabs"`
+		} `json:"twoColumnBrowseResultsRenderer"`
+	} `json:"contents"`
+}
+
+type SearchUserContentApiResp struct {
+	OnResponseReceivedActions []struct {
+		AppendContinuationItemsAction struct {
+			ContinuationItems []struct {
+				RichItemRenderer struct {
+					Content struct {
+						VideoRenderer UserVideoRendererResp `json:"videoRenderer"`
+					} `json:"content"`
+				} `json:"richItemRenderer"`
+			} `json:"continuationItems"`
+		} `json:"appendContinuationItemsAction"`
+	} `json:"onResponseReceivedActions"`
+}
+
+func (resp *UserContentYtInitialDataResp) ToUserVideoItems() []UserContentItem {
+	if resp == nil {
+		return []UserContentItem{}
+	}
+	var results []UserContentItem
+	for _, tab := range resp.Contents.TwoColumn.Tabs {
+		for _, contents := range tab.TabRenderer.Content.RichGridRenderer.Contents {
+			v := contents.RichItemRenderer.Content.VideoRenderer.ToVideoItem()
+			if v.ID == "" {
+				continue
+			}
+
+			results = append(results, v)
+		}
+	}
+	return results
+}
