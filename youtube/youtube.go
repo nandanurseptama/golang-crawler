@@ -13,6 +13,7 @@ type YoutubeCrawler interface {
 	SearchContent(ctx context.Context, param SearchContentParam) ([]VideoItem, error)
 	SearchChannel(ctx context.Context, param SearchContentParam) ([]ChannelItem, error)
 	GetUserContent(ctx context.Context, param SearchContentParam) ([]UserContentItem, error)
+	GetContentComments(ctx context.Context, param SearchContentParam) ([]CommentItem, error)
 }
 
 type Youtube struct {

@@ -19,7 +19,6 @@ func main() {
 		ChromePath:         path,
 		Headless:           false,
 		DisableGPU:         true,
-		NoSandbox:          true,
 		DisableDevSHMUsage: true,
 	}
 	flags, _ := config.GetFlags()
@@ -32,8 +31,8 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*3)
 	defer cancel()
 
-	results, err := youtubeCrawler.GetUserContent(ctx, youtube.SearchContentParam{
-		Term:                "mitocw",
+	results, err := youtubeCrawler.GetContentComments(ctx, youtube.SearchContentParam{
+		Term:                "r4-cftqTcdI",
 		Scroll:              3,
 		DelayScrollDuration: time.Second * 3,
 	})

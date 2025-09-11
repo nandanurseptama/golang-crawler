@@ -4,6 +4,8 @@
 // This file contains collection of youtube response struct
 package youtube
 
+import "strconv"
+
 type SearchContentResp struct {
 	OnResponseReceiveCommands []OnResponseReceiveCommandsResp `json:"onResponseReceivedCommands"`
 }
@@ -332,4 +334,119 @@ func (resp *UserContentYtInitialDataResp) ToUserVideoItems() []UserContentItem {
 		}
 	}
 	return results
+}
+
+type GetContentCommentsApiResp struct {
+	FrameworkUpdates struct {
+		EntityBatchUpdate struct {
+			Mutations []ContentCommentMutationResp `json:"mutations"`
+		} `json:"entityBatchUpdate"`
+	} `json:"frameworkUpdates"`
+	OnResponseReceivedEndpoints []struct {
+		ReloadContinuationItemsCommand struct {
+			ContinuationItems []struct {
+				ContinuationItemRenderer struct {
+					Trigger string `json:"trigger"`
+				} `json:"continuationItemRenderer"`
+			} `json:"continuationItems"`
+		} `json:"reloadContinuationItemsCommand"`
+		AppendContinuationItemsAction struct {
+			ContinuationItems []struct {
+				ContinuationItemRenderer struct {
+					Trigger string `json:"trigger"`
+				} `json:"continuationItemRenderer"`
+			} `json:"continuationItems"`
+		} `json:"appendContinuationItemsAction"`
+	} `json:"onResponseReceivedEndpoints"`
+}
+
+func (t *GetContentCommentsApiResp) GetTriggerContinuation() string {
+	if t == nil {
+		return ""
+	}
+	if len(t.OnResponseReceivedEndpoints) < 1 {
+		return ""
+	}
+
+	for _, resp := range t.OnResponseReceivedEndpoints {
+		for _, item := range resp.ReloadContinuationItemsCommand.ContinuationItems {
+			trigger := item.ContinuationItemRenderer.Trigger
+			if trigger != "" {
+				return trigger
+			}
+		}
+
+		for _, item := range resp.AppendContinuationItemsAction.ContinuationItems {
+			trigger := item.ContinuationItemRenderer.Trigger
+			if trigger != "" {
+				return trigger
+			}
+		}
+	}
+	return ""
+}
+
+type ContentCommentMutationResp struct {
+	Payload struct {
+		CommentEntityPayload struct {
+			Properties struct {
+				CommentId string `json:"commentId"`
+				Content   struct {
+					Content string `json:"content"`
+				} `json:"content"`
+				PublishedTimeText string `json:"publishedTime"`
+				ReplyLevel        int    `json:"replyLevel"`
+			} `json:"properties"`
+			Author struct {
+				ChannelID           string `json:"channelId"`
+				Name                string `json:"displayName"`
+				ChannelPageEndpoint struct {
+					InnertubeCommand struct {
+						BrowseEndpoint struct {
+							BrowseId string `json:"browseId"`
+							BaseUrl  string `json:"canonicalBaseUrl"`
+						} `json:"browseEndpoint"`
+					} `json:"innertubeCommand"`
+				} `json:"channelPageEndpoint"`
+			} `json:"author"`
+			Toolbar struct {
+				LikeCountNotliked string `json:"likeCountNotliked"`
+				ReplyCount        string `json:"replyCount"`
+			} `json:"toolbar"`
+		} `json:"commentEntityPayload"`
+	} `json:"payload"`
+}
+
+func (c *ContentCommentMutationResp) toCommentItem() CommentItem {
+	if c == nil {
+		return CommentItem{}
+	}
+
+	replyCount, _ := strconv.ParseUint(c.Payload.CommentEntityPayload.Toolbar.ReplyCount, 10, 64)
+	likeCount, _ := strconv.ParseUint(c.Payload.CommentEntityPayload.Toolbar.LikeCountNotliked, 0, 64)
+	return CommentItem{
+		ID:            c.Payload.CommentEntityPayload.Properties.CommentId,
+		Content:       c.Payload.CommentEntityPayload.Properties.Content.Content,
+		PublishedTime: c.Payload.CommentEntityPayload.Properties.PublishedTimeText,
+		Channel: Channel{
+			Name:     c.Payload.CommentEntityPayload.Author.Name,
+			ID:       c.Payload.CommentEntityPayload.Author.ChannelID,
+			Endpoint: c.Payload.CommentEntityPayload.Author.ChannelPageEndpoint.InnertubeCommand.BrowseEndpoint.BaseUrl,
+		},
+		LikeCount:  likeCount,
+		ReplyCount: replyCount,
+	}
+}
+
+func (c *GetContentCommentsApiResp) toCommentsItem() []CommentItem {
+	var items []CommentItem
+
+	for _, v := range c.FrameworkUpdates.EntityBatchUpdate.Mutations {
+		if v.toCommentItem().ID == "" {
+			continue
+		}
+
+		items = append(items, v.toCommentItem())
+	}
+	return items
 }

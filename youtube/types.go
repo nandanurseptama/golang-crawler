@@ -65,3 +65,12 @@ type UserContentItem struct {
 	// video published time
 	PublishedTime string `json:"publishedTime"`
 }
+
+type CommentItem struct {
+	ID            string  `json:"ID"`
+	Content       string  `json:"content"`
+	PublishedTime string  `json:"publishedTime"`
+	Channel       Channel `json:"channel"`
+	LikeCount     uint64  `json:"likeCount"`
+	ReplyCount    uint64  `json:"replyCount"`
+}
